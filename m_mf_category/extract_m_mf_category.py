@@ -77,13 +77,13 @@ def main():
     parser.add_argument('--type', '-t', choices=['large', 'middle', 'both'], default='both',
                        help='抽出する分類の種類 (large:大分類のみ, middle:中分類のみ, both:両方)')
     parser.add_argument('--input', '-i', 
-                       default=r"c:\Users\rpaka\Downloads\finance\m_mf_category_m.html",
+                       default=r"m_mf_category_m.html",
                        help='入力HTMLファイルのパス')
     parser.add_argument('--output-large', '-ol',
-                       default=r"c:\Users\rpaka\Downloads\finance\m_mf_category_l.csv",
+                       default=r"m_mf_category_l.csv",
                        help='大分類CSVファイルの出力パス')
     parser.add_argument('--output-middle', '-om',
-                       default=r"c:\Users\rpaka\Downloads\finance\m_mf_category_m.csv",
+                       default=r"m_mf_category_m.csv",
                        help='中分類CSVファイルの出力パス')
     
     args = parser.parse_args()
@@ -111,6 +111,7 @@ def main():
                 writer.writerow(['大分類'])
                 for large_cat in large_cats:
                     writer.writerow([large_cat])
+                writer.writerow(['未分類'])
 
             print(f"[大分類] CSVファイルを作成しました: {output_csv_file_l}")
             print(f"[大分類] 合計 {len(large_cats)} 行のデータを出力しました。")
@@ -122,6 +123,7 @@ def main():
                 writer.writerow(['大分類', '中分類'])
                 for row in categories_data:
                     writer.writerow(row)
+                writer.writerow(['未分類', '未分類'])
 
             print(f"[中分類] CSVファイルを作成しました: {output_csv_file_m}")
             print(f"[中分類] 合計 {len(categories_data)} 行のデータを出力しました。")
