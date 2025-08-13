@@ -1,2 +1,5 @@
 psycopg2-binary==2.9.10
 python-dotenv==1.0.0
+streamlit==1.48.0
+pandas==2.2.0
+plotly==5.17.0
