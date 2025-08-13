@@ -9,7 +9,7 @@ import os
 # プロジェクトルートをパスに追加
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from view.page_budget_expense import show_budget_view
+from page_budget_expense import show_budget_view
 
 # ページ設定
 st.set_page_config(

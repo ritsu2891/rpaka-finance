@@ -1,8 +1,8 @@
 """予算実績表示画面"""
 import streamlit as st
 import pandas as pd
-from view.repo import fetch_budget_data
-from view.dp_budget_expense import (
+from repo import fetch_budget_data
+from dp_budget_expense import (
     create_pivot_dataframe,
     create_grouped_categories_chart
 )
