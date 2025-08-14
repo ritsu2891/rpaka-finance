@@ -1,4 +1,4 @@
-"""予算実績表示画面"""
+"""予算項目別支出画面"""
 import streamlit as st
 import pandas as pd
 from repo import fetch_budget_data
