@@ -1,3 +1,5 @@
+DROP VIEW IF EXISTS v_budget_contents;
+CREATE VIEW v_budget_contents AS
 SELECT
     m_b.title,
     CASE
