@@ -100,11 +100,21 @@ def create_graph_budget_status(df, account_type):
             yshift=15
         )
     
+    num_items = len(df)
+    base_height = 300  # ベースとなる最小高さ
+    item_height = 50   # 各項目あたりの高さ
+    legend_space = 100 # 凡例のためのスペース
+    margin_space = 130 # 上下マージンの合計
+    
+    calculated_height = base_height + (num_items * item_height) + legend_space + margin_space
+    min_height = 400
+    final_height = max(min_height, calculated_height)
+    
     fig.update_layout(
         xaxis_title='金額',
         yaxis_title='予算項目',
         barmode='stack',
-        height=max(400, len(df) * 60),
+        height=final_height,
         margin=dict(l=150, r=100, t=80, b=50),
         showlegend=True,
         legend=dict(
