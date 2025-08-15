@@ -95,3 +95,70 @@ def fetch_inout_data():
     finally:
         if conn:
             conn.close()
+
+def fetch_budget_amount_status():
+    """v_budget_amount_statusビューからデータを取得"""
+    conn = None
+    try:
+        conn = get_connection()
+        query = """
+        SELECT
+            title,
+            set_amount,
+            present_amount,
+            remaining_amount,
+            ratio_amount,
+            planned_amount,
+            present_planned_amount,
+            remaining_planned_amount,
+            ratio_planned_amount,
+            set_amount_credit,
+            present_amount_credit,
+            remaining_amount_credit,
+            ratio_amount_credit,
+            planned_amount_credit,
+            present_planned_amount_credit,
+            remaining_planned_amount_credit,
+            ratio_planned_amount_credit
+        FROM v_budget_amount_status;
+        """
+        df = pd.read_sql_query(query, conn)
+        budget_titles = fetch_budget_titles()
+        df['title'] = pd.Categorical(df['title'], categories=budget_titles, ordered=True)
+        return df
+    except Exception as e:
+        raise Exception(f"データ取得エラー: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+def fetch_budget_total_amount_status():
+    """v_budget_total_amount_statusビューからデータを取得"""
+    conn = None
+    try:
+        conn = get_connection()
+        query = """
+        SELECT
+            set_amount,
+            present_amount,
+            planned_amount,
+            present_planned_amount,
+            ratio_amount,
+            ratio_planned_amount,
+            projected_amount,
+            set_amount_credit,
+            present_amount_credit,
+            planned_amount_credit,
+            present_planned_amount_credit,
+            ratio_amount_credit,
+            ratio_planned_amount_credit,
+            projected_amount_credit
+        FROM v_budget_total_amount_status;
+        """
+        df = pd.read_sql_query(query, conn)
+        return df
+    except Exception as e:
+        raise Exception(f"データ取得エラー: {e}")
+    finally:
+        if conn:
+            conn.close()

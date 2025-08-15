@@ -9,6 +9,7 @@ import os
 # プロジェクトルートをパスに追加
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+from page_status import show_page_status
 from page_inout import show_inout_view
 from page_budget_expense import show_budget_view
 
@@ -29,12 +30,15 @@ def main():
     page = st.sidebar.selectbox(
         "表示画面",
         [
+            "状況",
             "収支額",
             "予算項目別支出",
         ]
     )
     
-    if page == "収支額":
+    if page == "状況":
+        show_page_status()
+    elif page == "収支額":
         show_inout_view()
     elif page == "予算項目別支出":
         show_budget_view()
