@@ -26,12 +26,6 @@ def create_graph_inout(df):
             name='収支', mode='lines+markers', line=dict(color=px.colors.qualitative.Plotly[3], width=2), 
             yaxis='y2', showlegend=True)
         )
-        fig.add_trace(
-            go.Scatter(x=[target_df['年月'].iloc[-1]], y=[target_df['収支'].iloc[-1]], 
-            mode='markers', marker=dict(size=6), 
-            yaxis='y2', showlegend=False, name='収支', 
-            line=dict(color=px.colors.qualitative.Plotly[3]))
-        )
     else:
         fig.add_trace(
             go.Scatter(x=target_df['年月'], y=target_df['収支'], name='収支', 
@@ -64,12 +58,10 @@ def create_graph_out(df):
     
     for col in outcome_columns:
         if len(target_df) > 1 and target_df['年月'].iloc[-1].strftime('%Y-%m') == current_ym:
-            # 最後の点以外を線で繋ぐ
             fig.add_trace(
                 go.Scatter(x=target_df['年月'].iloc[:-1], y=target_df[col].iloc[:-1].abs(), 
                 name=col, mode='lines+markers', line=dict(width=2))
             )
-            # 最後の点は単独のマーカー
             fig.add_trace(
                 go.Scatter(x=[target_df['年月'].iloc[-1]], y=[abs(target_df[col].iloc[-1])], 
                 mode='markers', marker=dict(size=6), 
