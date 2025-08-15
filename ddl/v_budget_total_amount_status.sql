@@ -8,6 +8,7 @@ SELECT
     SUM(present_amount) / SUM(set_amount) AS ratio_amount,
     SUM(present_planned_amount) / SUM(set_amount) AS ratio_planned_amount,
     SUM(GREATEST(set_amount, present_planned_amount)) AS projected_amount,
+    SUM(set_amount_credit) AS set_amount_credit,
     SUM(present_amount_credit) AS present_amount_credit,
     SUM(planned_amount_credit) AS planned_amount_credit,
     SUM(present_planned_amount_credit) AS present_planned_amount_credit,

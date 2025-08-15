@@ -108,19 +108,31 @@ SELECT
     m_b.set_amount,
     COALESCE(p_a.present_amount, 0) AS present_amount,
     m_b.set_amount - COALESCE(p_a.present_amount, 0) AS remaining_amount,
-    COALESCE(p_a.present_amount, 0) / m_b.set_amount AS ratio_amount,
+    CASE
+        WHEN m_b.set_amount = 0 THEN 0
+        ELSE COALESCE(p_a.present_amount, 0) / m_b.set_amount
+    END AS ratio_amount,
     COALESCE(p_p.planned_amount, 0) AS planned_amount,
     COALESCE(p_a.present_amount, 0) + COALESCE(p_p.planned_amount, 0) AS present_planned_amount,
     m_b.set_amount - COALESCE(p_a.present_amount, 0) - COALESCE(p_p.planned_amount, 0) AS remaining_planned_amount,
-    (COALESCE(p_a.present_amount, 0) + COALESCE(p_p.planned_amount, 0)) / m_b.set_amount AS ratio_planned_amount,
+    CASE
+        WHEN m_b.set_amount = 0 THEN 0
+        ELSE (COALESCE(p_a.present_amount, 0) + COALESCE(p_p.planned_amount, 0)) / m_b.set_amount
+    END AS ratio_planned_amount,
     m_b.set_amount_credit,
     COALESCE(p_a.present_amount_credit, 0) AS present_amount_credit,
     m_b.set_amount_credit - COALESCE(p_a.present_amount_credit, 0) AS remaining_amount_credit,
-    COALESCE(p_a.present_amount_credit, 0) / m_b.set_amount_credit AS ratio_amount_credit,
+    CASE
+        WHEN m_b.set_amount_credit = 0 THEN 0
+        ELSE COALESCE(p_a.present_amount_credit, 0) / m_b.set_amount_credit
+    END AS ratio_amount_credit,
     COALESCE(p_p.planned_amount_credit, 0) AS planned_amount_credit,
     COALESCE(p_a.present_amount_credit, 0) + COALESCE(p_p.planned_amount_credit, 0) AS present_planned_amount_credit,
     m_b.set_amount_credit - COALESCE(p_a.present_amount_credit, 0) - COALESCE(p_p.planned_amount_credit, 0) AS remaining_planned_amount_credit,
-    (COALESCE(p_a.present_amount_credit, 0) + COALESCE(p_p.planned_amount_credit, 0)) / m_b.set_amount_credit AS ratio_planned_amount_credit
+    CASE
+        WHEN m_b.set_amount_credit = 0 THEN 0
+        ELSE (COALESCE(p_a.present_amount_credit, 0) + COALESCE(p_p.planned_amount_credit, 0)) / m_b.set_amount_credit
+    END AS ratio_planned_amount_credit
 FROM m_budget m_b
 LEFT JOIN present_amount p_a ON p_a.id = m_b.id
 LEFT JOIN planned_amount p_p ON p_p.id = m_b.id
