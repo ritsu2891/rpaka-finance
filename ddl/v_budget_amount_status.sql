@@ -7,7 +7,7 @@ current_ym_cf AS (
     WHERE DATE_TRUNC('month', t.date) = DATE_TRUNC('month', CURRENT_DATE)
 ),
 current_ym_recon_planned_cf AS (
-    SELECT DISTINCT t_planned_cf_id
+    SELECT DISTINCT t_planned_cf_id AS id
     FROM current_ym_cf
 ),
 present_amount AS (
@@ -59,9 +59,10 @@ present_amount AS (
 current_ym_planned_cf AS (
     SELECT *
     FROM t_planned_cf t
+    LEFT JOIN current_ym_recon_planned_cf c ON c.id = t.id
     WHERE
         DATE_TRUNC('month', t.date) = DATE_TRUNC('month', CURRENT_DATE) AND
-        t.id NOT IN ( SELECT t_planned_cf_id FROM current_ym_recon_planned_cf )
+        c.id IS NULL
 ),
 planned_amount AS (
     SELECT
