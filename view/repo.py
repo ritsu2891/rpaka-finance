@@ -143,17 +143,31 @@ def fetch_budget_total_amount_status():
             present_amount,
             planned_amount,
             present_planned_amount,
-            ratio_amount,
-            ratio_planned_amount,
             projected_amount,
             set_amount_credit,
             present_amount_credit,
             planned_amount_credit,
             present_planned_amount_credit,
-            ratio_amount_credit,
-            ratio_planned_amount_credit,
             projected_amount_credit
         FROM v_budget_total_amount_status;
+        """
+        df = pd.read_sql_query(query, conn)
+        return df
+    except Exception as e:
+        raise Exception(f"データ取得エラー: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+def fetch_income():
+    """v_income_totalビューからデータを取得"""
+    conn = None
+    try:
+        conn = get_connection()
+        query = """
+        SELECT
+            income
+        FROM v_income_total;
         """
         df = pd.read_sql_query(query, conn)
         return df

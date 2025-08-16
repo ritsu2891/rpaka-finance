@@ -1,7 +1,7 @@
 """状況画面（メイン）"""
 import streamlit as st
 import pandas as pd
-from repo import fetch_budget_amount_status, fetch_budget_total_amount_status
+from repo import fetch_budget_amount_status, fetch_budget_total_amount_status, fetch_income
 from dp_status import create_graph_budget_status
 
 def show_page_status():
@@ -9,6 +9,7 @@ def show_page_status():
         with st.spinner('データを読み込み中...'):
             df_amount_status = fetch_budget_amount_status()
             df_total_amount_status = fetch_budget_total_amount_status()
+            df_income = fetch_income()
 
         if df_amount_status.empty:
             st.warning("データが見つかりません。")
@@ -18,20 +19,30 @@ def show_page_status():
 
         st.header("予算消化状況")
         st.subheader("全体")
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("支出（予測）", f"¥{df_total_amount_status['projected_amount'].values[0]:,.0f}")
-        col2.metric("支出（実績）", f"¥{df_total_amount_status['present_amount'].values[0]:,.0f}")
-        col3.metric("支出（実績+計画）", f"¥{df_total_amount_status['present_planned_amount'].values[0]:,.0f}")
-        col4.metric("予算消化率", f"{df_total_amount_status['ratio_planned_amount'].values[0]*100:.1f}%")
+
+        projected_amount = df_total_amount_status['projected_amount'].values[0]
+        present_amount = df_total_amount_status['present_amount'].values[0]
+        present_planned_amount = df_total_amount_status['present_planned_amount'].values[0]
+        income = df_income['income'].values[0]
+        rest_free_amount = income - projected_amount
+        projected_amount_ratio = projected_amount / income if income != 0 else 0
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("支出（予測）", f"¥{projected_amount:,.0f}")
+        col2.metric("支出（実績）", f"¥{present_amount:,.0f}")
+        col3.metric("支出（実績+計画）", f"¥{present_planned_amount:,.0f}")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("収入", f"¥{income:,.0f}")
+        col2.metric("残支出可能額", f"¥{rest_free_amount:,.0f}")
+        col3.metric("支出（予測）/収入", f"{projected_amount_ratio:,.1%}")
         fig = create_graph_budget_status(df_amount_status, "all")
         st.plotly_chart(fig)
 
         st.subheader("クレジット")
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3 = st.columns(3)
         col1.metric("支出（予測）", f"¥{df_total_amount_status['projected_amount_credit'].values[0]:,.0f}")
         col2.metric("支出（実績）", f"¥{df_total_amount_status['present_amount_credit'].values[0]:,.0f}")
         col3.metric("支出（実績+計画）", f"¥{df_total_amount_status['present_planned_amount_credit'].values[0]:,.0f}")
-        col4.metric("予算消化率", f"{df_total_amount_status['ratio_planned_amount_credit'].values[0]*100:.1f}%")
         fig = create_graph_budget_status(df_amount_status, "credit")
         st.plotly_chart(fig)
 
