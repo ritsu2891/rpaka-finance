@@ -13,7 +13,6 @@ import sys
 from datetime import datetime
 from decimal import Decimal
 import psycopg2
-from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 
 print("ライブラリのインポート完了")
@@ -26,9 +25,7 @@ def load_env():
         'port': os.getenv('DB_PORT'),
         'database': os.getenv('DB_NAME'),
         'user': os.getenv('DB_USER'),
-        'password': os.getenv('DB_PASSWORD'),
-        'created_by': os.getenv('CREATED_BY', 'us0p0siaro4nkn0z'),
-        'updated_by': os.getenv('UPDATED_BY', 'us0p0siaro4nkn0z')
+        'password': os.getenv('DB_PASSWORD')
     }
 
 def get_db_connection(db_config):
@@ -46,11 +43,6 @@ def get_db_connection(db_config):
     except Exception as e:
         print(f"データベース接続エラー: {e}")
         sys.exit(1)
-
-def get_max_nc_order(cursor, table_name):
-    """指定テーブルの最大nc_order値を取得"""
-    cursor.execute(f"SELECT COALESCE(MAX(nc_order), 0) FROM {table_name}")
-    return cursor.fetchone()[0]
 
 def get_account_id(cursor, account_name):
     """口座名からアカウントIDを取得"""
@@ -91,7 +83,7 @@ def parse_csv_row(row):
         'mf_id': row['ID']
     }
 
-def validate_and_convert_data(cursor, row_data, row_num):
+def validate_and_convert_data(cursor, row_data):
     """データの検証と変換"""
     errors = []
     
@@ -140,40 +132,40 @@ def validate_and_convert_data(cursor, row_data, row_num):
         'mf_id': row_data['mf_id']
     }, []
 
-def insert_new_record(cursor, data, nc_order, created_by):
+def insert_new_record(cursor, data):
     """新規レコードの挿入"""
     now = datetime.now()
     
     insert_query = """
     INSERT INTO t_mf_cf (
-        created_at, created_by, nc_order, title, calc_target, date, amount,
+        created_at, title, calc_target, date, amount,
         m_account_id, m_mf_category_l_id, m_mf_category_m_id, memo, transfer, mf_id
     ) VALUES (
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     )
     """
     
     cursor.execute(insert_query, (
-        now, created_by, nc_order, data['title'], data['calc_target'],
+        now, data['title'], data['calc_target'],
         data['date'], data['amount'], data['account_id'],
         data['category_l_id'], data['category_m_id'],
         data['memo'], data['transfer'], data['mf_id']
     ))
 
-def update_existing_record(cursor, existing_id, data, updated_by):
+def update_existing_record(cursor, existing_id, data):
     """既存レコードの更新"""
     now = datetime.now()
     
     update_query = """
     UPDATE t_mf_cf SET
-        updated_at = %s, updated_by = %s, title = %s, calc_target = %s,
+        updated_at = %s, title = %s, calc_target = %s,
         date = %s, amount = %s, m_account_id = %s, m_mf_category_l_id = %s,
         m_mf_category_m_id = %s, memo = %s, transfer = %s
     WHERE id = %s
     """
     
     cursor.execute(update_query, (
-        now, updated_by, data['title'], data['calc_target'],
+        now, data['title'], data['calc_target'],
         data['date'], data['amount'], data['account_id'],
         data['category_l_id'], data['category_m_id'],
         data['memo'], data['transfer'], existing_id
@@ -195,11 +187,6 @@ def process_csv_file(csv_file_path):
     print("データベース接続成功")
     
     try:
-        # 現在の最大nc_orderを取得
-        print("最大nc_orderを取得中...")
-        max_nc_order = get_max_nc_order(cursor, 't_mf_cf')
-        next_nc_order = max_nc_order + 1
-        print(f"次のnc_order: {next_nc_order}")
         
         # 処理結果の統計
         stats = {
@@ -223,7 +210,7 @@ def process_csv_file(csv_file_path):
                     row_data = parse_csv_row(row)
                     
                     # データの検証と変換
-                    validated_data, validation_errors = validate_and_convert_data(cursor, row_data, row_num)
+                    validated_data, validation_errors = validate_and_convert_data(cursor, row_data)
                     
                     if validation_errors:
                         print(f"エラー（{row_num}行目）: {', '.join(validation_errors)}")
@@ -235,14 +222,13 @@ def process_csv_file(csv_file_path):
                     
                     if existing_id:
                         # 既存レコードを更新
-                        update_existing_record(cursor, existing_id, validated_data, db_config['updated_by'])
+                        update_existing_record(cursor, existing_id, validated_data)
                         stats['updated'] += 1
                         print(f"更新（{row_num}行目）: ID={validated_data['mf_id']}")
                     else:
                         # 新規レコードを挿入
-                        insert_new_record(cursor, validated_data, next_nc_order, db_config['created_by'])
+                        insert_new_record(cursor, validated_data)
                         stats['inserted'] += 1
-                        next_nc_order += 1
                         print(f"挿入（{row_num}行目）: ID={validated_data['mf_id']}")
                 
                 except Exception as e:
@@ -284,12 +270,6 @@ def main():
         print("引数を解析中...")
         args = parser.parse_args()
         print(f"指定されたCSVファイル: {args.csv_file}")
-        
-        # if not os.path.exists(args.csv_file):
-        #     print(f"エラー: ファイルが存在しません: {args.csv_file}")
-        #     sys.exit(1)
-        
-        # print("ファイルの存在を確認しました")
         
         # CSV処理の実行
         print("CSV処理を開始します...")
