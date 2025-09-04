@@ -28,7 +28,7 @@ def fetch_budget_titles():
         SELECT
             title
         FROM m_budget
-        ORDER BY nc_order;
+        ORDER BY display_order;
         """
         df = pd.read_sql_query(query, conn)
         return df['title']
@@ -96,7 +96,26 @@ def fetch_inout_data():
         if conn:
             conn.close()
 
-def fetch_budget_amount_status():
+def fetch_budget_yms():
+    conn = None
+    try:
+        conn = get_connection()
+        query = """
+        SELECT
+            title, id, from_date, to_date
+        FROM m_budget_ym
+        ORDER BY from_date DESC;
+        """
+        df = pd.read_sql_query(query, conn)
+        df.set_index('title', inplace=True)
+        return df
+    except Exception as e:
+        raise Exception(f"データ取得エラー: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+def fetch_budget_amount_status(ym_id: int):
     """v_budget_amount_statusビューからデータを取得"""
     conn = None
     try:
@@ -120,9 +139,10 @@ def fetch_budget_amount_status():
             present_planned_amount_credit,
             remaining_planned_amount_credit,
             ratio_planned_amount_credit
-        FROM v_budget_amount_status;
+        FROM v_budget_amount_status
+        WHERE ym_id = %s;
         """
-        df = pd.read_sql_query(query, conn)
+        df = pd.read_sql_query(query, conn, params=(int(ym_id),))
         budget_titles = fetch_budget_titles()
         df['title'] = pd.Categorical(df['title'], categories=budget_titles, ordered=True)
         return df
@@ -132,7 +152,7 @@ def fetch_budget_amount_status():
         if conn:
             conn.close()
 
-def fetch_budget_total_amount_status():
+def fetch_budget_total_amount_status(ym_id: int):
     """v_budget_total_amount_statusビューからデータを取得"""
     conn = None
     try:
@@ -149,9 +169,10 @@ def fetch_budget_total_amount_status():
             planned_amount_credit,
             present_planned_amount_credit,
             projected_amount_credit
-        FROM v_budget_total_amount_status;
+        FROM v_budget_total_amount_status
+        WHERE ym_id = %s;
         """
-        df = pd.read_sql_query(query, conn)
+        df = pd.read_sql_query(query, conn, params=(int(ym_id),))
         return df
     except Exception as e:
         raise Exception(f"データ取得エラー: {e}")
@@ -159,7 +180,7 @@ def fetch_budget_total_amount_status():
         if conn:
             conn.close()
 
-def fetch_income():
+def fetch_income(ym_id: int):
     """v_income_totalビューからデータを取得"""
     conn = None
     try:
@@ -167,9 +188,10 @@ def fetch_income():
         query = """
         SELECT
             income
-        FROM v_income_total;
+        FROM v_income_total
+        WHERE ym_id = %s;
         """
-        df = pd.read_sql_query(query, conn)
+        df = pd.read_sql_query(query, conn, params=(int(ym_id),))
         return df
     except Exception as e:
         raise Exception(f"データ取得エラー: {e}")

@@ -87,7 +87,7 @@ planned_amount AS (
                     WHERE
                         rp_cf.t_planned_cf_id IS NULL AND
                         cf.date BETWEEN b.from_date AND b.to_date AND
-                        cf.m_mf_category_l_id = cf.m_mf_category_l_id
+                        cf.m_mf_category_l_id = b.m_mf_category_l_id
                )
             WHEN 'mf_category_m'
                 THEN (
@@ -138,7 +138,9 @@ planned_amount AS (
     WHERE b.set_amount IS NOT NULL
 )
 SELECT
+    b.ym_id,
     b.ym,
+    b.budget_id,
     b.title,
     b.set_amount,
     COALESCE(p_a.present_amount, 0) AS present_amount,
