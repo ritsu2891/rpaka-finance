@@ -22,9 +22,7 @@ def load_env():
         'port': os.getenv('DB_PORT'),
         'database': os.getenv('DB_NAME'),
         'user': os.getenv('DB_USER'),
-        'password': os.getenv('DB_PASSWORD'),
-        'created_by': os.getenv('CREATED_BY', 'us0p0siaro4nkn0z'),
-        'updated_by': os.getenv('UPDATED_BY', 'us0p0siaro4nkn0z')
+        'password': os.getenv('DB_PASSWORD')
     }
 
 
@@ -82,25 +80,17 @@ def get_repeat_planned_cf_for_month(cursor, month):
         m_mf_category_l_id,
         m_mf_category_m_id,
         m_account_id,
-        nc_order
+        display_order
     FROM m_repeat_planned_cf 
     WHERE enable = TRUE 
       AND (
           (interval_type = 'yearly' AND month = %s) OR 
           (interval_type = 'monthly')
       )
-    ORDER BY nc_order
+    ORDER BY display_order
     """
     cursor.execute(select_query, (month,))
     return cursor.fetchall()
-
-
-def get_max_nc_order(cursor, table_name):
-    """指定テーブルの最大nc_order値を取得"""
-    cursor.execute(f"SELECT COALESCE(MAX(nc_order), 0) as max_nc_order FROM {table_name}")
-    result = cursor.fetchone()
-    return result['max_nc_order'] if result else 0
-
 
 def generate_planned_cf_date(year, month, day):
     """予定入出金の日付を生成"""
@@ -118,7 +108,7 @@ def generate_planned_cf_date(year, month, day):
         raise
 
 
-def insert_planned_cf(cursor, repeat_cf, target_year, target_month, nc_order, created_by):
+def insert_planned_cf(cursor, repeat_cf, target_year, target_month):
     """予定入出金レコードを挿入"""
     now = datetime.now()
     
@@ -127,9 +117,6 @@ def insert_planned_cf(cursor, repeat_cf, target_year, target_month, nc_order, cr
     
     insert_query = """
     INSERT INTO t_planned_cf (
-        created_at,
-        created_by,
-        nc_order,
         title,
         date,
         amount,
@@ -138,15 +125,12 @@ def insert_planned_cf(cursor, repeat_cf, target_year, target_month, nc_order, cr
         m_account_id,
         m_repeat_planned_cf_id
     ) VALUES (
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        %s, %s, %s, %s, %s, %s, %s
     )
     RETURNING id
     """
     
     cursor.execute(insert_query, (
-        now,
-        created_by,
-        nc_order,
         repeat_cf['title'],
         planned_date,
         repeat_cf['amount'],
@@ -178,7 +162,7 @@ def get_generated_planned_cf(cursor, year, month):
     WHERE EXTRACT(YEAR FROM p.date) = %s 
       AND EXTRACT(MONTH FROM p.date) = %s 
       AND p.m_repeat_planned_cf_id IS NOT NULL
-    ORDER BY p.date, p.nc_order
+    ORDER BY p.date
     """
     cursor.execute(select_query, (year, month))
     return cursor.fetchall()
@@ -250,10 +234,6 @@ def process_repeat_planned_cf(months_offset):
             conn.commit()
             return
         
-        # 現在の最大nc_orderを取得
-        max_nc_order = get_max_nc_order(cursor, 't_planned_cf')
-        next_nc_order = max_nc_order + 1
-        
         # 繰り返し予定入出金から予定入出金を生成
         print("予定入出金を生成中...")
         generated_count = 0
@@ -261,13 +241,11 @@ def process_repeat_planned_cf(months_offset):
         for repeat_cf in repeat_cf_list:
             try:
                 planned_cf_id = insert_planned_cf(
-                    cursor, repeat_cf, target_year, target_month, 
-                    next_nc_order, db_config['created_by']
+                    cursor, repeat_cf, target_year, target_month,
                 )
                 
                 if planned_cf_id:
                     generated_count += 1
-                    next_nc_order += 1
                     interval_type_jp = "年次" if repeat_cf['interval_type'] == 'yearly' else "月次"
                     print(f"生成: {repeat_cf['title']} ({interval_type_jp}) (ID: {planned_cf_id})")
                 
