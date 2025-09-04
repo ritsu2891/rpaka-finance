@@ -73,4 +73,4 @@ SELECT
     END AS amount_credit
 FROM m_budget_ym m_bym
 CROSS JOIN m_budget m_b
-ORDER BY m_bym.from_date, m_b.nc_order;
+ORDER BY m_bym.from_date, m_b.display_order;
